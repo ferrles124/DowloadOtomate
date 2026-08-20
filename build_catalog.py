@@ -1,12 +1,10 @@
 import os
-import json
-from PIL import Image
+import shutil
 
-def extract_individual_items(assets_dir, output_dir):
+def extract_individual_items_fast(assets_dir, output_dir):
     """
-    LPC deposundaki tüm giysileri tek tek bulur,
-    vücut/yüz/saç öğelerini eler ve her bir giysiyi 
-    kendi kategorisinde tek başına şeffaf PNG olarak kaydeder.
+    Sistem düzeyinde direkt dosya kopyalama yaparak
+    saniyeler içinde binlerce kıyafet spritesheet'ini ayıklar.
     """
     if not os.path.exists(assets_dir):
         print(f"Hata: {assets_dir} klasörü bulunamadı!")
@@ -19,7 +17,7 @@ def extract_individual_items(assets_dir, output_dir):
                 full_path = os.path.join(root, file)
                 rel_path = os.path.relpath(full_path, assets_dir).replace("\\", "/")
                 
-                # Vücut, yüz, saç, kafa katmanlarını ELE
+                # Vücut, yüz, saç, kafa, gölge katmanlarını ELE
                 if any(x in rel_path for x in ["body", "hair", "head", "face", "eyes", "shadow"]):
                     continue
                 
@@ -34,24 +32,20 @@ def extract_individual_items(assets_dir, output_dir):
                 elif "weapons" in rel_path or "shield" in rel_path:
                     category = "weapons"
 
-                # Hedef kaydetme klasörünü oluştur (Örn: dist_items/pants/)
+                # Hedef klasörü oluştur
                 target_dir = os.path.join(output_dir, category)
                 os.makedirs(target_dir, exist_ok=True)
 
-                # Temiz dosya ismi oluştur (Örn: legs_pants_male_blue.png)
+                # Temiz dosya ismi oluştur
                 clean_name = rel_path.replace("/", "_")
                 target_path = os.path.join(target_dir, clean_name)
 
-                # Görseli açıp direkt şeffaf olarak kaydet
-                try:
-                    img = Image.open(full_path).convert("RGBA")
-                    img.save(target_path, "PNG")
-                    count += 1
-                except Exception as e:
-                    print(f"Hata ({rel_path}): {e}")
+                # Doğrudan hızlı kopyalama (Pillow kullanmadan, saniyeler sürer)
+                shutil.copy2(full_path, target_path)
+                count += 1
 
-    print(f"Toplam {count} adet bağımsız kıyafet/öğe üretildi ve '{output_dir}' klasörüne kaydedildi!")
+    print(f"Toplam {count} adet bağımsız kıyafet spritesheet'i '{output_dir}' klasörüne aktarıldı!")
 
 if __name__ == "__main__":
-    extract_individual_items("lpc_assets", "dist_items")
-                    
+    extract_individual_items_fast("lpc_assets", "dist_items")
+    
