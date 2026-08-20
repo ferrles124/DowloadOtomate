@@ -1,10 +1,10 @@
-name: Generate Standalone Outfit Sprites
+name: Extract Standalone Individual Items
 
 on:
   push:
     paths:
-      - 'outfits/**'
       - '.github/workflows/**'
+      - 'build_catalog.py'
   workflow_dispatch:
 
 permissions:
@@ -28,7 +28,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: LPC Katman Deposunu Otomatik İndir
+      - name: LPC Katman Deposunu İndir
         run: |
           if [ ! -d "lpc_assets" ]; then
             git clone https://github.com/sanderfrenken/Universal-LPC-Spritesheet-Character-Generator.git temp_lpc
@@ -36,16 +36,12 @@ jobs:
             rm -rf temp_lpc
           fi
 
-      - name: Katalog Ve Rastgele Kıyafet JSON'ları Üret
-        run: |
-          python build_catalog.py
-
-      - name: Kıyafet Sprite'larını Render Et
-        run: python generate_outfits.py
+      - name: Tekil Kıyafet Parçalarını Üret ve Ayıkla
+        run: python build_catalog.py
 
       - name: Üretilen PNG Görsellerini Repoya Kaydet
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "auto: yeni kiyafet sprite'lari uretildi [skip ci]"
-          file_pattern: 'dist_outfits/*.png outfits_catalog.json outfits/*.json'
+          commit_message: "auto: tekil kiyafet parcalari ayiklandi [skip ci]"
+          file_pattern: 'dist_items/**/*.png'
           
