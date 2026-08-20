@@ -1,0 +1,44 @@
+name: Generate Standalone Outfit Sprites
+
+on:
+  push:
+    paths:
+      - 'outfits/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repoyu Klonla
+        uses: actions/checkout@v4
+
+      - name: Python Ortamını Kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Bağımlılıkları Yükle
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: LPC Katman Deposunu Çek
+        run: |
+          if [ ! -d "lpc_assets" ]; then
+            git clone https://github.com/sanderfrenken/Universal-LPC-Spritesheet-Character-Generator.git temp_lpc
+            mv temp_lpc/spritesheets lpc_assets
+            rm -rf temp_lpc
+          fi
+
+      - name: Kıyafet Sprite'larını Üret
+        run: python generate_outfits.py
+
+      - name: Görselleri Repoya Kaydet
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "auto: yeni kiyafet sprite'lari uretildi [skip ci]"
+          file_pattern: 'dist_outfits/*.png'
+          
