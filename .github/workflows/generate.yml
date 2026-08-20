@@ -31,7 +31,7 @@ jobs:
       - name: LPC Katman Deposunu İndir
         run: |
           if [ ! -d "lpc_assets" ]; then
-            git clone https://github.com/sanderfrenken/Universal-LPC-Spritesheet-Character-Generator.git temp_lpc
+            git clone --depth 1 https://github.com/sanderfrenken/Universal-LPC-Spritesheet-Character-Generator.git temp_lpc
             mv temp_lpc/spritesheets lpc_assets
             rm -rf temp_lpc
           fi
