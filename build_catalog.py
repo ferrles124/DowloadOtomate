@@ -1,23 +1,32 @@
 import os
 import shutil
 
-def extract_normal_male_outfits(assets_dir, output_dir):
+def filter_normal_male_items():
     """
-    LPC deposundan sadece erkek karaktere uygun,
-    normal/usturuplu günlük kıyafetleri seçer ve 'normal_male' klasörüne toplar.
+    Dışarıya istek atmadan, repodaki mevcut klasörleri tarar
+    ve sadece normal/usturuplu erkek kıyafetlerini 'dist_items/normal_male/' klasörüne süzer.
     """
-    if not os.path.exists(assets_dir):
-        print(f"Hata: {assets_dir} klasörü bulunamadı!")
+    # Önceden indirilmiş olan yerel klasör yolları
+    possible_source_dirs = ["lpc_assets", "dist_items"]
+    
+    source_dir = None
+    for d in possible_source_dirs:
+        if os.path.exists(d):
+            source_dir = d
+            break
+
+    if not source_dir:
+        print("Hata: Repoda taranacak yerel görsel klasörü bulunamadı!")
         return
 
-    # Sadece erkek ve nötr kıyafet yolları / anahtar kelimeleri
+    # Süzülecek kategoriler
     valid_categories = {
         "shirts": ["shirts", "jackets", "vests"],
         "pants": ["pants"],
         "shoes": ["shoes", "boots"]
     }
 
-    # Elenecek kelimeler (Fantezi, kadın, zırh, ork vb.)
+    # Elenecek kadın/fantezi/zırh kelimeleri
     exclude_keywords = [
         "female", "dress", "skirt", "bikini", "robe", 
         "armor", "chainmail", "plate", "plate_mail", 
@@ -26,17 +35,21 @@ def extract_normal_male_outfits(assets_dir, output_dir):
     ]
 
     count = 0
-    for root, _, files in os.walk(assets_dir):
+    for root, _, files in os.walk(source_dir):
+        # Zaten oluşmuş olan normal_male klasörünü tekrar taramamak için atla
+        if "normal_male" in root:
+            continue
+
         for file in files:
             if file.endswith(".png"):
                 full_path = os.path.join(root, file)
-                rel_path = os.path.relpath(full_path, assets_dir).replace("\\", "/").lower()
+                rel_path = os.path.relpath(full_path, source_dir).replace("\\", "/").lower()
 
-                # 1. Vücut, yüz, saç ve istenmeyen fantezi/kadın kıyafetlerini ele
+                # 1. Vücut, yüz, saç ve fantezi/kadın kıyafetlerini ele
                 if any(x in rel_path for x in ["body", "hair", "head", "face", "eyes", "shadow"] + exclude_keywords):
                     continue
 
-                # 2. Sadece erkek veya ortak kullanım (male/unisex) kıyafetleri al
+                # 2. Sadece erkek veya ortak (unisex) olanları al
                 if "female" in rel_path:
                     continue
 
@@ -52,8 +65,8 @@ def extract_normal_male_outfits(assets_dir, output_dir):
                 if not category:
                     continue
 
-                # Target klasör: dist_items/normal_male/shirts vb.
-                target_dir = os.path.join(output_dir, "normal_male", category)
+                # Hedef dizin: dist_items/normal_male/<kategori>/
+                target_dir = os.path.join("dist_items", "normal_male", category)
                 os.makedirs(target_dir, exist_ok=True)
 
                 clean_name = rel_path.replace("/", "_")
@@ -62,8 +75,8 @@ def extract_normal_male_outfits(assets_dir, output_dir):
                 shutil.copy2(full_path, target_path)
                 count += 1
 
-    print(f"Toplam {count} adet normal erkek kıyafeti 'dist_items/normal_male/' klasörüne ayrıştırıldı!")
+    print(f"İşlem Tamamlandı! Toplam {count} adet normal erkek kıyafeti yerel olarak 'dist_items/normal_male/' klasörüne süzüldü.")
 
 if __name__ == "__main__":
-    extract_normal_male_outfits("lpc_assets", "dist_items")
+    filter_normal_male_items()
     
